@@ -14,7 +14,7 @@ app = Flask(__name__)
 dash_app = dash.Dash(__name__, server=app, url_base_pathname='/dashboard/', serve_locally=True)
 
 # API Key for Alpha Vantage
-ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
+ALPHA_VANTAGE_API_KEY = os.getenv('Y49FMBXFSM82REX0')
 
 # Fetch stock data from Alpha Vantage
 def fetch_stock_data(symbol='AAPL'):
