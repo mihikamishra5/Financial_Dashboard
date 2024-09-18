@@ -1,95 +1,93 @@
 from flask import Flask, render_template_string
 import dash
 from dash import dcc, html
+from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
-from newsapi import NewsApiClient
+import requests
 import os
-<<<<<<< HEAD
-=======
-from newsapi import NewsApiClient
->>>>>>> dd7ed4ec33b48677d1a57407b025c5885d932874
+
 # Initialize Flask app
 app = Flask(__name__)
 
 # Initialize Dash app and bind it to the Flask app
 dash_app = dash.Dash(__name__, server=app, url_base_pathname='/dashboard/', serve_locally=True)
 
-# Initialize NewsAPI client (replace with your NewsAPI key)
-<<<<<<< HEAD
-newsapi = NewsApiClient(api_key='b977db904b954b54b03e468179309596')
-=======
-#newsapi = NewsApiClient(api_key='b977db904b954b54b03e468179309596')
-# Fetch NewsAPI key from environment variables
-newsapi_key = os.getenv('b977db904b954b54b03e468179309596')
-newsapi = NewsApiClient(api_key=newsapi_key)
+# API Key for Alpha Vantage
+ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 
->>>>>>> dd7ed4ec33b48677d1a57407b025c5885d932874
-# Example DataFrames (replace with real-time data)
-stock_data = pd.DataFrame({
-    'Stock': ['AAPL', 'GOOGL', 'AMZN'],
-    'Price': [145.09, 2738.27, 3527.83],
-    'Sector': ['tech', 'tech', 'tech']
-})
+# Fetch stock data from Alpha Vantage
+def fetch_stock_data(symbol='AAPL'):
+    url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=60min&apikey={ALPHA_VANTAGE_API_KEY}'
+    response = requests.get(url).json()
+    time_series = response.get('Time Series (60min)', {})
+    df = pd.DataFrame.from_dict(time_series, orient='index').astype(float)
+    df['date'] = pd.to_datetime(df.index)
+    df.rename(columns={"4. close": "Close Price"}, inplace=True)
+    return df
 
-crypto_data = pd.DataFrame({
-    'Crypto': ['Bitcoin', 'Ethereum', 'Ripple'],
-    'Price': [45000, 3200, 1.15]
-})
+# Fetch cryptocurrency data using CoinGecko API
+def fetch_crypto_data():
+    COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/simple/price'
+    params = {'ids': 'bitcoin,ethereum,ripple', 'vs_currencies': 'usd'}
+    response = requests.get(COINGECKO_API_URL, params=params).json()
+    return pd.DataFrame(response).T
 
-commodity_data = pd.DataFrame({
-    'Commodity': ['Gold', 'Silver', 'Oil'],
-    'Price': [1800, 23.45, 70]
-})
-
-# Global Markets Data
-global_markets_data = pd.DataFrame({
-    'Region': ['US', 'Europe', 'Asia'],
-    'Market Index': [4500, 3450, 1200]
-})
-
-# Fetch financial news using NewsAPI
-def fetch_financial_news():
-    news_data = newsapi.get_top_headlines(category='business', language='en', country='us')
-    articles = news_data['articles']
-    return pd.DataFrame(articles)
-
-news_df = fetch_financial_news()
-
-# Dash layout with multiple panels
+# Dash layout
 dash_app.layout = html.Div([
-    html.H1('Real-Time Financial News Dashboard', style={'textAlign': 'center'}),
-
-    # Stock panel
+    html.H1('Real-Time Financial Dashboard', style={'textAlign': 'center', 'color': '#00aaff'}),
+    
+    # Stock symbol selection dropdown
     html.Div([
-        html.H2('Stocks'),
-        dcc.Graph(figure=px.bar(stock_data, x='Stock', y='Price', title='Stock Prices'), id='stock-graph')
-    ], className='six columns'),
+        html.Label('Select Stock Symbol', style={'color': '#ffffff'}),
+        dcc.Dropdown(
+            id='stock-symbol',
+            options=[
+                {'label': 'Apple', 'value': 'AAPL'},
+                {'label': 'Google', 'value': 'GOOGL'},
+                {'label': 'Amazon', 'value': 'AMZN'},
+                {'label': 'Microsoft', 'value': 'MSFT'}
+            ],
+            value='AAPL'
+        ),
+    ], style={'width': '48%', 'margin': 'auto'}),
+    
+    # Stock Panel
+    html.Div(id='stock-output', className='panel', style={'color': '#ffffff'}),
 
-    # Crypto panel
+    # Crypto Panel
     html.Div([
-        html.H2('Cryptocurrencies'),
-        dcc.Graph(figure=px.pie(crypto_data, names='Crypto', values='Price', title='Crypto Prices'))
-    ], className='six columns'),
+        html.H2('Cryptocurrency Prices (USD)', style={'textAlign': 'center'}),
+        dcc.Graph(id='crypto-prices'),
+    ], className='panel', style={'color': '#ffffff'}),
 
-    # Commodities panel
-    html.Div([
-        html.H2('Commodities'),
-        dcc.Graph(figure=px.bar(commodity_data, x='Commodity', y='Price', title='Commodity Prices'))
-    ], className='six columns'),
+    # Real-time update interval (every minute)
+    dcc.Interval(
+        id='interval-component',
+        interval=60*1000,  # Update every minute
+        n_intervals=0
+    )
+], style={'backgroundColor': '#1f2d3d', 'padding': '20px'})
 
-    # Global Markets panel
-    html.Div([
-        html.H2('Global Markets'),
-        dcc.Graph(figure=px.bar(global_markets_data, x='Region', y='Market Index', title='Global Market Indices'))
-    ], className='six columns'),
+# Callback for stock panel
+@dash_app.callback(
+    Output('stock-output', 'children'),
+    [Input('stock-symbol', 'value'), Input('interval-component', 'n_intervals')]
+)
+def update_stock_panel(selected_symbol, n):
+    stock_data = fetch_stock_data(selected_symbol)
+    fig = px.line(stock_data, x=stock_data['date'], y="Close Price", title=f'{selected_symbol} Stock Price (Real-Time)')
+    return dcc.Graph(figure=fig)
 
-    # Financial news display
-    html.Div([
-        html.H2('Latest Financial News'),
-        html.Ul([html.Li(html.A(article['title'], href=article['url'], target='_blank')) for _, article in news_df.iterrows()])
-    ], className='six columns')
-], className='row')
+# Callback for crypto panel
+@dash_app.callback(
+    Output('crypto-prices', 'figure'),
+    [Input('interval-component', 'n_intervals')]
+)
+def update_crypto_prices(n):
+    crypto_data = fetch_crypto_data()
+    fig = px.bar(crypto_data, x=crypto_data.index, y='usd', title='Crypto Prices (Bitcoin, Ethereum, Ripple)', labels={'x': 'Crypto', 'y': 'Price (USD)'})
+    return fig
 
 # Flask route for the combined page
 @app.route('/')
@@ -114,28 +112,6 @@ def dashboard():
     </html>
     ''')
 
-# Dropdown for filtering stock sectors
-dash_app.layout.children.insert(0, html.Div([
-    html.Label('Select Stock Sector'),
-    dcc.Dropdown(
-        id='sector-filter',
-        options=[
-            {'label': 'Technology', 'value': 'tech'},
-            {'label': 'Healthcare', 'value': 'health'},
-            {'label': 'Energy', 'value': 'energy'}
-        ],
-        value='tech'
-    )
-], className='six columns'))
-
-# Callback to update stock data based on selected sector
-@dash_app.callback(
-    dash.dependencies.Output('stock-graph', 'figure'),
-    [dash.dependencies.Input('sector-filter', 'value')]
-)
-def update_stock_chart(selected_sector):
-    filtered_data = stock_data[stock_data['Sector'] == selected_sector]
-    return px.bar(filtered_data, x='Stock', y='Price', title=f'{selected_sector.capitalize()} Stock Prices')
-
 if __name__ == '__main__':
     app.run(debug=True)
+

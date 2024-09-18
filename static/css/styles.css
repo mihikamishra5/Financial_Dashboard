@@ -1,40 +1,67 @@
+/* General styles */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
+    background-color: #1f2d3d;
+    color: #ffffff;
     margin: 0;
     padding: 20px;
 }
 
 h1, h2 {
+    color: #00aaff;
     text-align: center;
-    color: #333;
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
+/* Flexbox layout for multiple columns */
 .row {
     display: flex;
-    justify-content: space-between;
     flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.panel {
+    background-color: #273849;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 20px 0;
+    padding: 20px;
+    width: 48%;
+}
+
+/* Make graphs and charts fit well in the panels */
+.graph-container {
+    height: 400px;
 }
 
 .six.columns {
     width: 48%;
-    margin: 1%;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
 }
 
 .six.columns:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    transform: scale(1.02);
+    transform: scale(1.05);
     transition: all 0.3s ease;
+}
+
+/* Interactive Elements */
+button, select, input {
+    background-color: #00aaff;
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    margin: 5px;
+}
+
+button:hover, select:hover, input:hover {
+    background-color: #007acc;
+    cursor: pointer;
 }
 
 @media (max-width: 768px) {
