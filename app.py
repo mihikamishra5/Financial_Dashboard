@@ -4,7 +4,7 @@ from dash import dcc, html
 import plotly.express as px
 import pandas as pd
 from newsapi import NewsApiClient
-
+import os
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -13,7 +13,6 @@ dash_app = dash.Dash(__name__, server=app, url_base_pathname='/dashboard/', serv
 
 # Initialize NewsAPI client (replace with your NewsAPI key)
 newsapi = NewsApiClient(api_key='b977db904b954b54b03e468179309596')
-
 # Example DataFrames (replace with real-time data)
 stock_data = pd.DataFrame({
     'Stock': ['AAPL', 'GOOGL', 'AMZN'],
