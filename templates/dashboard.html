@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial News Dashboard</title>
+    <title>News Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>Real-Time Financial News Dashboard</h1>
-    <ul>
-        {% for article in articles %}
-            <li>
-                <h2>{{ article['title'] }}</h2>
-                <p>{{ article['description'] }}</p>
-                <a href="{{ article['url'] }}" target="_blank">Read more</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <h1>Welcome to the Real-Time Financial News Dashboard</h1>
+        <p>This is your main page. Visit <a href="/dashboard/">the advanced dashboard</a> to view interactive charts and graphs.</p>
+    </div>
 </body>
 </html>
+
+
+
 
